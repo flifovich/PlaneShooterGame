@@ -6,7 +6,7 @@ import java.awt.geom.AffineTransform;
 
 public class Player {
 
-    private static final double PLAYER_SIZE = 64;
+    protected static final double PLAYER_SIZE = 64;
     private double x;
     private double y;
     private final float MAX_SPEED = 1f;
