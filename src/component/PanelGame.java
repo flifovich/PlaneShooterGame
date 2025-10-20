@@ -1,5 +1,6 @@
 package component;
 
+import object.Balloon;
 import object.Bullet;
 import object.Player;
 
@@ -7,9 +8,11 @@ import javax.swing.JComponent;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class PanelGame extends JComponent {
     private Graphics2D g2;
@@ -34,6 +37,7 @@ public class PanelGame extends JComponent {
     // Game Object
     private Player player;
     private List<Bullet> bullets;
+    private List<Balloon> balloons;
 
     public void start() {
         width = getWidth();
@@ -66,9 +70,34 @@ public class PanelGame extends JComponent {
         thread.start();
     }
 
+    private void addBalloon() {
+        Random random = new Random();
+        int locationY = random.nextInt(height-50)+25;
+        Balloon balloon = new Balloon();
+        balloon.changeLocation(0, locationY);
+        balloon.changeAngle(0);
+        balloons.add(balloon);
+        int locationY2 = random.nextInt(height-50)+25;
+        Balloon balloon2 = new Balloon();
+        balloon2.changeLocation(width, locationY2);
+        balloon2.changeAngle(180);
+        balloons.add(balloon2);
+    }
+
     private void initObjectGame() {
         player = new Player();
         player.changeLocation(150, 150);
+        balloons = new ArrayList<>();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(start) {
+                    addBalloon();
+                    sleep(3000);
+                }
+            }
+        }).start();
+
     }
 
     private void initKeyboard() {
@@ -137,6 +166,16 @@ public class PanelGame extends JComponent {
                     }
                     player.update();
                     player.changeAngle(angle);
+                    for (int i = 0; i < balloons.size(); i++) {
+                        Balloon balloon = balloons.get(i);
+                        if (balloon != null) {
+                            balloon.update();
+                            if(!balloon.check(width, height)) {
+                                balloons.remove(balloon);
+                                System.out.println("Balloon removed");
+                            }
+                        }
+                    }
                     sleep(5);
                 }
             }
@@ -153,6 +192,7 @@ public class PanelGame extends JComponent {
                         Bullet bullet = bullets.get(i);
                         if(bullet != null) {
                             bullet.update();
+                            checkBullets(bullet);
                             if(!bullet.check(width, height)) {
                                 bullets.remove(bullet);
                             }
@@ -166,6 +206,20 @@ public class PanelGame extends JComponent {
         }).start();
     }
 
+    private void checkBullets(Bullet bullet) {
+        for (int i = 0; i < balloons.size(); i++) {
+            Balloon balloon = balloons.get(i);
+            if (balloon != null) {
+                Area area = new Area(bullet.getShape());
+                area.intersect(balloon.getShape());
+                if (!area.isEmpty()) {
+                    balloons.remove(balloon);
+                    bullets.remove(bullet);
+                }
+            }
+        }
+    }
+
     private void drawBackground() {
         g2.setColor(new Color(30,30,30));
         g2.fillRect(0,0, width, height);
@@ -176,6 +230,12 @@ public class PanelGame extends JComponent {
             Bullet bullet = bullets.get(i);
             if(bullet != null) {
                 bullet.draw(g2);
+            }
+        }
+        for (int i = 0; i < balloons.size(); i++) {
+            Balloon balloon = balloons.get(i);
+            if (balloon != null) {
+                balloon.draw(g2);
             }
         }
     }
