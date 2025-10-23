@@ -3,8 +3,10 @@ package object;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
+import java.awt.geom.Path2D;
 
-public class Player {
+public class Player extends HpRender{
 
     protected static final double PLAYER_SIZE = 64;
     private double x;
@@ -12,13 +14,30 @@ public class Player {
     private final float MAX_SPEED = 1f;
     private float speed = 0f;
     private float angle = 0f; // direction
+    private final Area playerShape;
     private final Image image;
     private final Image imageSpeed;
     private boolean speedUp;
+    private boolean alive = true;
 
     public Player () {
+        super(new HP(50, 50));
         this.image = new ImageIcon(getClass().getResource("/image/plane.png")).getImage();
         this.imageSpeed = new ImageIcon(getClass().getResource("/image/plane_speed.png")).getImage();;
+        Path2D p = new Path2D.Double();
+        p.moveTo(0, 15);
+        p.lineTo(20, 5);
+        p.lineTo(PLAYER_SIZE + 15, PLAYER_SIZE / 2);
+        p.lineTo(20, PLAYER_SIZE - 5);
+        p.lineTo(0, PLAYER_SIZE - 15);
+        playerShape = new Area(p);
+    }
+
+    public Area getShape() {
+        AffineTransform afx = new AffineTransform();
+        afx.translate(x, y);
+        afx.rotate(Math.toRadians(angle), PLAYER_SIZE / 2, PLAYER_SIZE / 2);
+        return new Area(afx.createTransformedShape(playerShape));
     }
 
     public void changeLocation(double x, double y) {
@@ -47,7 +66,13 @@ public class Player {
         AffineTransform tran = new AffineTransform();
         tran.rotate(Math.toRadians(angle + 45), PLAYER_SIZE / 2, PLAYER_SIZE / 2);
         g2.drawImage(speedUp ? imageSpeed : image, tran, null);
+        hpRender(g2, getShape(), y);
         g2.setTransform(oldTransform);
+
+        // Test for shape
+//        g2.setColor(Color.red);
+//        g2.draw(getShape());
+//        g2.draw(getShape().getBounds());
     }
 
     public double getX() {
@@ -78,5 +103,20 @@ public class Player {
         } else {
             speed -= 0.003f;
         }
+    }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public void setAlive(boolean alive){
+        this.alive = alive;
+    }
+
+    public void reset() {
+        alive = true;
+        resetHP();
+        angle = 0;
+        speed = 0;
     }
 }

@@ -175,6 +175,10 @@ public class PanelGame extends JComponent {
                             if(!balloon.check(width, height)) {
                                 balloons.remove(balloon);
                                 System.out.println("Balloon removed");
+                            } else {
+                                if (player.isAlive()) {
+                                    checkPlayer(balloon);
+                                }
                             }
                         }
                     }
@@ -227,7 +231,7 @@ public class PanelGame extends JComponent {
                 area.intersect(balloon.getShape());
                 if (!area.isEmpty()) {
                     boomEffects.add(new Effect(bullet.getCenterX(), bullet.getCenterY(), 3, 5, 60, 0.5f, new Color(230, 207, 105)));
-                    if (true) {
+                    if (!balloon.updateHP(bullet.getSize())) {
                         balloons.remove(balloon);
                         double x = balloon.getX() + Balloon.BALLOON_SIZE / 2;
                         double y = balloon.getY() + Balloon.BALLOON_SIZE / 2;
@@ -244,12 +248,47 @@ public class PanelGame extends JComponent {
         }
     }
 
+    private void checkPlayer(Balloon balloon) {
+            if (balloon != null) {
+                Area area = new Area(player.getShape());
+                area.intersect(balloon.getShape());
+                if (!area.isEmpty()) {
+                    double balloonHp = balloon.getHp();
+                    if (!balloon.updateHP(player.getHp())) {
+                        balloons.remove(balloon);
+                        double x = balloon.getX() + Balloon.BALLOON_SIZE / 2;
+                        double y = balloon.getY() + Balloon.BALLOON_SIZE / 2;
+                        boomEffects.add(new Effect(x, y, 5, 5, 75, 0.05f, new Color(32, 178, 169)));
+                        boomEffects.add(new Effect(x, y, 5, 5, 75, 0.1f, new Color(32, 178, 169)));
+                        boomEffects.add(new Effect(x, y, 10, 10, 100, 0.3f, new Color(230, 207, 105)));
+                        boomEffects.add(new Effect(x, y, 10, 5, 100, 0.05f, new Color(255, 70, 70)));
+                        boomEffects.add(new Effect(x, y, 10, 5, 150, 0.2f, new Color(255, 255, 255)));
+
+                    }
+
+                    if (!player.updateHP(balloonHp)) {
+                        player.setAlive(false);
+                        double x = balloon.getX() + Balloon.BALLOON_SIZE / 2;
+                        double y = balloon.getY() + Balloon.BALLOON_SIZE / 2;
+                        boomEffects.add(new Effect(x, y, 5, 5, 75, 0.05f, new Color(32, 178, 169)));
+                        boomEffects.add(new Effect(x, y, 5, 5, 75, 0.1f, new Color(32, 178, 169)));
+                        boomEffects.add(new Effect(x, y, 10, 10, 100, 0.3f, new Color(230, 207, 105)));
+                        boomEffects.add(new Effect(x, y, 10, 5, 100, 0.05f, new Color(255, 70, 70)));
+                        boomEffects.add(new Effect(x, y, 10, 5, 150, 0.2f, new Color(255, 255, 255)));
+
+                    }
+                }
+            }
+    }
+
     private void drawBackground() {
         g2.setColor(new Color(30,30,30));
         g2.fillRect(0,0, width, height);
     }
     private void drawGame() {
-        player.draw(g2);
+        if(player.isAlive()) {
+            player.draw(g2);
+        }
         for (int i = 0; i < bullets.size(); i++) {
             Bullet bullet = bullets.get(i);
             if(bullet != null) {

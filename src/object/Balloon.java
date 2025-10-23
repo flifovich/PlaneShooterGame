@@ -7,7 +7,7 @@ import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
 
-public class Balloon {
+public class Balloon extends HpRender {
     public static final double BALLOON_SIZE=50;
     private double x;
     private double y;
@@ -17,6 +17,7 @@ public class Balloon {
     private final Area ballonShape;
 
     public Balloon(){
+        super(new HP(20, 20));
         this.image = new ImageIcon(getClass().getResource("/image/balloon.png")).getImage();
         double shrinkFactor = 0.70; // size compared to png
         double ellipseWidth = BALLOON_SIZE * shrinkFactor;
@@ -61,6 +62,7 @@ public class Balloon {
         AffineTransform tran = new AffineTransform();
         g2.drawImage(image, tran, null);
         Shape shape = getShape();
+        hpRender(g2, shape, y);
         g2.setTransform(oldTransform);
 
         // Test for shape
