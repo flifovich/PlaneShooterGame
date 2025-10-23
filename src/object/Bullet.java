@@ -66,4 +66,8 @@ public class Bullet {
     public double getCenterX() {
         return x + size / 2;
     }
+
+    public double getCenterY() {
+        return y + size / 2;
+    }
 }

@@ -2,6 +2,7 @@ package component;
 
 import object.Balloon;
 import object.Bullet;
+import object.Effect;
 import object.Player;
 
 import javax.swing.JComponent;
@@ -24,7 +25,6 @@ public class PanelGame extends JComponent {
     private Key key;
     private int shotTime;
 
-
     // Game FPS
     // 60 fps
     // 1 second = 1,000 milisecond
@@ -38,6 +38,7 @@ public class PanelGame extends JComponent {
     private Player player;
     private List<Bullet> bullets;
     private List<Balloon> balloons;
+    private List<Effect>  boomEffects;
 
     public void start() {
         width = getWidth();
@@ -88,6 +89,7 @@ public class PanelGame extends JComponent {
         player = new Player();
         player.changeLocation(150, 150);
         balloons = new ArrayList<>();
+        boomEffects = new ArrayList<>();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -200,6 +202,17 @@ public class PanelGame extends JComponent {
                             bullets.remove(bullet);
                         }
                     }
+                    for (int i = 0; i < boomEffects.size(); i++) {
+                        Effect boomEffect = boomEffects.get(i);
+                        if(boomEffect != null) {
+                            boomEffect.update();
+                            if(!boomEffect.check()) {
+                                boomEffects.remove(boomEffect);
+                            }
+                        } else {
+                            boomEffects.remove(boomEffect);
+                        }
+                    }
                     sleep(1);
                 }
             }
@@ -213,7 +226,18 @@ public class PanelGame extends JComponent {
                 Area area = new Area(bullet.getShape());
                 area.intersect(balloon.getShape());
                 if (!area.isEmpty()) {
-                    balloons.remove(balloon);
+                    boomEffects.add(new Effect(bullet.getCenterX(), bullet.getCenterY(), 3, 5, 60, 0.5f, new Color(230, 207, 105)));
+                    if (true) {
+                        balloons.remove(balloon);
+                        double x = balloon.getX() + Balloon.BALLOON_SIZE / 2;
+                        double y = balloon.getY() + Balloon.BALLOON_SIZE / 2;
+                        boomEffects.add(new Effect(x, y, 5, 5, 75, 0.05f, new Color(32, 178, 169)));
+                        boomEffects.add(new Effect(x, y, 5, 5, 75, 0.1f, new Color(32, 178, 169)));
+                        boomEffects.add(new Effect(x, y, 10, 10, 100, 0.3f, new Color(230, 207, 105)));
+                        boomEffects.add(new Effect(x, y, 10, 5, 100, 0.05f, new Color(255, 70, 70)));
+                        boomEffects.add(new Effect(x, y, 10, 5, 150, 0.2f, new Color(255, 255, 255)));
+
+                    }
                     bullets.remove(bullet);
                 }
             }
@@ -236,6 +260,12 @@ public class PanelGame extends JComponent {
             Balloon balloon = balloons.get(i);
             if (balloon != null) {
                 balloon.draw(g2);
+            }
+        }
+        for (int i = 0; i < boomEffects.size(); i++) {
+            Effect boomEffect = boomEffects.get(i);
+            if (boomEffect != null) {
+                boomEffect.draw(g2);
             }
         }
     }
