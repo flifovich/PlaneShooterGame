@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Area;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +40,8 @@ public class PanelGame extends JComponent {
     private List<Bullet> bullets;
     private List<Balloon> balloons;
     private List<Effect>  boomEffects;
+    private int score = 0;
+    private int topScore = 0;
 
     public void start() {
         width = getWidth();
@@ -102,6 +105,13 @@ public class PanelGame extends JComponent {
 
     }
 
+    public void resetGame() {
+        balloons.clear();
+        bullets.clear();
+        player.changeLocation(150, 150);
+        player.reset();
+        score = 0;
+    }
     private void initKeyboard() {
         key = new Key();
         requestFocus();
@@ -118,6 +128,8 @@ public class PanelGame extends JComponent {
                     key.setKeyJ(true);
                 } else if (e.getKeyCode() == KeyEvent.VK_K) {
                     key.setKeyK(true);
+                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    key.setKeyEnter(true);
                 }
             }
 
@@ -133,6 +145,8 @@ public class PanelGame extends JComponent {
                     key.setKeyJ(false);
                 } else if (e.getKeyCode() == KeyEvent.VK_K) {
                     key.setKeyK(false);
+                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    key.setKeyEnter(false);
                 }
             }
         });
@@ -141,33 +155,39 @@ public class PanelGame extends JComponent {
             public void run() {
                 float s=0.5f; // for rotating
                 while (start) {
-                    float angle = player.getAngle();
-                    if(key.isKeyLeft()){
-                        angle -= s;
-                    }
-                    if(key.isKeyRight()){
-                        angle += s;
-                    }
-                    if(key.isKeyJ() || key.isKeyK()) {
-                        if(shotTime == 0) {
-                            if(key.isKeyJ()){
-                                bullets.add(0, new Bullet(player.getX(),player.getY(),player.getAngle(),5, 1f));
-                            }else {
-                                bullets.add(0, new Bullet(player.getX(),player.getY(),player.getAngle(),20, 1f));
+                    if (player.isAlive()) {
+                        float angle = player.getAngle();
+                        if(key.isKeyLeft()){
+                            angle -= s;
+                        }
+                        if(key.isKeyRight()){
+                            angle += s;
+                        }
+                        if(key.isKeyJ() || key.isKeyK()) {
+                            if(shotTime == 0) {
+                                if(key.isKeyJ()){
+                                    bullets.add(0, new Bullet(player.getX(),player.getY(),player.getAngle(),5, 1f));
+                                }else {
+                                    bullets.add(0, new Bullet(player.getX(),player.getY(),player.getAngle(),20, 1f));
+                                }
+                            }
+                            shotTime++;
+                            if(shotTime==20) {
+                                shotTime=0;
                             }
                         }
-                        shotTime++;
-                        if(shotTime==20) {
-                            shotTime=0;
+                        if(key.isKeySpace()){
+                            player.speedUp();
+                        } else {
+                            player.speedDown();
+                        }
+                        player.update();
+                        player.changeAngle(angle);
+                    } else {
+                        if(key.isKeyEnter()) {
+                            resetGame();
                         }
                     }
-                    if(key.isKeySpace()){
-                        player.speedUp();
-                    } else {
-                        player.speedDown();
-                    }
-                    player.update();
-                    player.changeAngle(angle);
                     for (int i = 0; i < balloons.size(); i++) {
                         Balloon balloon = balloons.get(i);
                         if (balloon != null) {
@@ -232,6 +252,10 @@ public class PanelGame extends JComponent {
                 if (!area.isEmpty()) {
                     boomEffects.add(new Effect(bullet.getCenterX(), bullet.getCenterY(), 3, 5, 60, 0.5f, new Color(230, 207, 105)));
                     if (!balloon.updateHP(bullet.getSize())) {
+                        score++;
+                        if(topScore < score) {
+                            topScore = score;
+                        }
                         balloons.remove(balloon);
                         double x = balloon.getX() + Balloon.BALLOON_SIZE / 2;
                         double y = balloon.getY() + Balloon.BALLOON_SIZE / 2;
@@ -268,8 +292,8 @@ public class PanelGame extends JComponent {
 
                     if (!player.updateHP(balloonHp)) {
                         player.setAlive(false);
-                        double x = balloon.getX() + Balloon.BALLOON_SIZE / 2;
-                        double y = balloon.getY() + Balloon.BALLOON_SIZE / 2;
+                        double x = player.getX() + Balloon.BALLOON_SIZE / 2;
+                        double y = player.getY() + Balloon.BALLOON_SIZE / 2;
                         boomEffects.add(new Effect(x, y, 5, 5, 75, 0.05f, new Color(32, 178, 169)));
                         boomEffects.add(new Effect(x, y, 5, 5, 75, 0.1f, new Color(32, 178, 169)));
                         boomEffects.add(new Effect(x, y, 10, 10, 100, 0.3f, new Color(230, 207, 105)));
@@ -306,6 +330,30 @@ public class PanelGame extends JComponent {
             if (boomEffect != null) {
                 boomEffect.draw(g2);
             }
+        }
+        g2.setColor(Color.white);
+        g2.setFont(getFont().deriveFont(Font.BOLD, 25f));
+        g2.drawString("Score: " + score, 10, 30);
+        g2.drawString("Top Score: " + topScore, 150, 30);
+        if(!player.isAlive()) {
+            String text = "GAME OVER";
+            String textKey = "Press Enter to continue...";
+            g2.setFont(getFont().deriveFont(Font.BOLD, 50f));
+            FontMetrics fm = g2.getFontMetrics();
+            Rectangle2D r2 = fm.getStringBounds(text, g2);
+            double textWidth = r2.getWidth();
+            double textHeight = r2.getHeight();
+            double x = (width - textWidth) / 2;
+            double y = (height - textHeight) / 2;
+            g2.drawString(text, (int) x, (int) y - fm.getAscent());
+            g2.setFont(getFont().deriveFont(Font.BOLD, 15f));
+            fm = g2.getFontMetrics();
+            r2 = fm.getStringBounds(textKey, g2);
+            textWidth = r2.getWidth();
+            textHeight = r2.getWidth();
+            x = (width - textWidth) / 2;
+            y = (height - textHeight) / 2;
+            g2.drawString(textKey, (int) x, (int) y + fm.getAscent() + 50);
         }
     }
 

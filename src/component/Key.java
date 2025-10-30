@@ -7,6 +7,7 @@ public class Key {
     private boolean keySpace;
     private boolean keyJ;
     private boolean keyK;
+    private boolean keyEnter;
 
     public boolean isKeyRight() {
         return keyRight;
@@ -46,5 +47,13 @@ public class Key {
 
     public void setKeyK(boolean keyK) {
         this.keyK = keyK;
+    }
+
+    public boolean isKeyEnter() {
+        return keyEnter;
+    }
+
+    public void setKeyEnter(boolean keyEnter) {
+        this.keyEnter = keyEnter;
     }
 }
