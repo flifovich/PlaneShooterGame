@@ -8,7 +8,7 @@ import java.awt.geom.Path2D;
 
 public class Player extends HpRender{
 
-    protected static final double PLAYER_SIZE = 64;
+    public static final double PLAYER_SIZE = 64;
     private double x;
     private double y;
     private final float MAX_SPEED = 1f;

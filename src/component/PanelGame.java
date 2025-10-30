@@ -183,6 +183,23 @@ public class PanelGame extends JComponent {
                         }
                         player.update();
                         player.changeAngle(angle);
+
+                        double px = player.getX();
+                        double py = player.getY();
+                        double playerSize = Player.PLAYER_SIZE;
+
+                        if (px < 0) {
+                            player.changeLocation(0, py);
+                        }
+                        if (py < 0) {
+                            player.changeLocation(px, 0);
+                        }
+                        if (px + playerSize > width) {
+                            player.changeLocation(width - playerSize, py);
+                        }
+                        if (py + playerSize > height) {
+                            player.changeLocation(px, height - playerSize);
+                        }
                     } else {
                         if(key.isKeyEnter()) {
                             resetGame();
